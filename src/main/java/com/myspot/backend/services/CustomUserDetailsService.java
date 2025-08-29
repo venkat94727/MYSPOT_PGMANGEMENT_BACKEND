@@ -1,6 +1,6 @@
 package com.myspot.backend.services;
 
-import com.myspot.backend.entities.PGManagement;
+import com.myspot.backend.entities.PGManagementOwner;
 import com.myspot.backend.repository.PGManagementRepository;
 import com.myspot.backend.security.CustomUserPrincipal;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String emailAddress) throws UsernameNotFoundException {
         log.debug("Loading PG Management user by email: {}", emailAddress);
         
-        PGManagement pgManagement = pgManagementRepository.findByEmailAddress(emailAddress)
+        PGManagementOwner pgManagement = pgManagementRepository.findByEmailAddress(emailAddress)
                 .orElseThrow(() -> {
                     log.error("PG Management not found with email: {}", emailAddress);
                     return new UsernameNotFoundException("PG Management not found with email: " + emailAddress);
@@ -35,7 +35,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserById(Long pgId) {
         log.debug("Loading PG Management user by ID: {}", pgId);
         
-        PGManagement pgManagement = pgManagementRepository.findById(pgId)
+        PGManagementOwner pgManagement = pgManagementRepository.findById(pgId)
                 .orElseThrow(() -> {
                     log.error("PG Management not found with ID: {}", pgId);
                     return new UsernameNotFoundException("PG Management not found with ID: " + pgId);

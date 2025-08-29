@@ -1,7 +1,7 @@
 // src/main/java/com/myspot/backend/dto/request/PGRegistrationRequest.java
 package com.myspot.backend.dto.request;
 
-import com.myspot.backend.entities.PGManagement.PropertyType;
+import com.myspot.backend.entities.PGManagementOwner.PropertyType;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;

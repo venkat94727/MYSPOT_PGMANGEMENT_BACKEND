@@ -3,7 +3,7 @@ package com.myspot.backend.services;
 import com.myspot.backend.dto.request.*;
 import com.myspot.backend.dto.response.AuthenticationResponse;
 import com.myspot.backend.dto.response.OtpResponse;
-import com.myspot.backend.entities.PGManagement;
+import com.myspot.backend.entities.PGManagementOwner;
 import com.myspot.backend.repository.PGManagementRepository;
 import com.myspot.backend.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -47,7 +47,7 @@ public class PGAuthService {
             throw new IllegalArgumentException("Phone number already registered");
         }
 
-        PGManagement pg = createPGFromRequest(request);
+        PGManagementOwner pg = createPGFromRequest(request);
 
         // Hash the raw password and set it explicitly before saving
         String hashedPassword = passwordEncoder.encode(request.getPassword());
@@ -76,7 +76,7 @@ public class PGAuthService {
 
     public AuthenticationResponse login(PGLoginRequest request, String clientIp, String userAgent) {
         log.info("Login attempt for PG Management: {}", request.getEmailAddress());
-        PGManagement pg = pgManagementRepository.findByEmailAddress(request.getEmailAddress())
+        PGManagementOwner pg = pgManagementRepository.findByEmailAddress(request.getEmailAddress())
                 .orElseThrow(() -> new UsernameNotFoundException("PG not found"));
 
         if (!pg.getIsActive()) {
@@ -137,7 +137,7 @@ public class PGAuthService {
 
     public AuthenticationResponse verifyOtp(OtpVerificationRequest request, String clientIp, String userAgent) {
         log.info("OTP verification for PG: {}", request.getEmailAddress());
-        PGManagement pg = pgManagementRepository.findByEmailAddress(request.getEmailAddress())
+        PGManagementOwner pg = pgManagementRepository.findByEmailAddress(request.getEmailAddress())
                 .orElseThrow(() -> new UsernameNotFoundException("PG not found"));
 
         if (!otpService.verifyOtp(pg.getEmailOtp(), request.getOtp()) || pg.isOtpExpired()) {
@@ -176,7 +176,7 @@ public class PGAuthService {
 
     public OtpResponse resendOtp(ResendOtpRequest request) {
         log.info("Resending OTP for PG: {}", request.getEmailAddress());
-        PGManagement pg = pgManagementRepository.findByEmailAddress(request.getEmailAddress())
+        PGManagementOwner pg = pgManagementRepository.findByEmailAddress(request.getEmailAddress())
                 .orElseThrow(() -> new UsernameNotFoundException("PG not found"));
 
         if (pg.getLastOtpRequest() != null &&
@@ -201,9 +201,9 @@ public class PGAuthService {
 
     public void forgotPassword(ForgotPasswordRequest request) {
         log.info("Forgot password for PG: {}", request.getEmailAddress());
-        Optional<PGManagement> opt = pgManagementRepository.findByEmailAddress(request.getEmailAddress());
+        Optional<PGManagementOwner> opt = pgManagementRepository.findByEmailAddress(request.getEmailAddress());
         if (opt.isEmpty()) return;
-        PGManagement pg = opt.get();
+        PGManagementOwner pg = opt.get();
         String token = otpService.generateResetToken();
         pg.setPasswordResetToken(token);
         pg.setPasswordResetExpiry(LocalDateTime.now().plusHours(1));
@@ -213,7 +213,7 @@ public class PGAuthService {
 
     public void resetPassword(ResetPasswordRequest request) {
         log.info("Reset password attempt");
-        PGManagement pg = pgManagementRepository.findByPasswordResetToken(request.getToken())
+        PGManagementOwner pg = pgManagementRepository.findByPasswordResetToken(request.getToken())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid token"));
         if (pg.isPasswordResetTokenExpired()) throw new IllegalArgumentException("Token expired");
         pg.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
@@ -228,7 +228,7 @@ public class PGAuthService {
             throw new BadCredentialsException("Invalid refresh token");
         }
         String email = jwtTokenProvider.getEmailFromToken(request.getRefreshToken());
-        PGManagement pg = pgManagementRepository.findByEmailAddress(email)
+        PGManagementOwner pg = pgManagementRepository.findByEmailAddress(email)
                 .orElseThrow(() -> new UsernameNotFoundException("PG not found"));
         String newAccess = jwtTokenProvider.createToken(email, pg.getPgId().toString());
         return AuthenticationResponse.builder()
@@ -260,7 +260,7 @@ public class PGAuthService {
     }
 
     public void sendVerificationEmail(EmailVerificationRequest request) {
-        PGManagement pg = pgManagementRepository.findByEmailAddress(request.getEmailAddress())
+        PGManagementOwner pg = pgManagementRepository.findByEmailAddress(request.getEmailAddress())
                 .orElseThrow(() -> new UsernameNotFoundException("PG not found"));
         String otp = otpService.generateOtp();
         pg.setEmailOtp(otp);
@@ -283,8 +283,8 @@ public class PGAuthService {
         if (!request.hasRequiredFields()) throw new IllegalArgumentException("Missing fields");
     }
 
-    private PGManagement createPGFromRequest(PGRegistrationRequest req) {
-        return PGManagement.builder()
+    private PGManagementOwner createPGFromRequest(PGRegistrationRequest req) {
+        return PGManagementOwner.builder()
                 .pgName(req.getPgName())
                 .ownerName(req.getOwnerName())
                 .pgProfilePicture(req.getPgProfilePicture())
@@ -307,7 +307,7 @@ public class PGAuthService {
                 .isActive(true)
                 .emailVerified(false)
                 .phoneVerified(false)
-                .verificationStatus(PGManagement.VerificationStatus.PENDING)
+                .verificationStatus(PGManagementOwner.VerificationStatus.PENDING)
                 .build();
     }
 }

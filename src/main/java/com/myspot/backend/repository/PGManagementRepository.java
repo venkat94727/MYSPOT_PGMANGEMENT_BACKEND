@@ -1,8 +1,8 @@
 package com.myspot.backend.repository;
 
-import com.myspot.backend.entities.PGManagement;
-import com.myspot.backend.entities.PGManagement.VerificationStatus;
-import com.myspot.backend.entities.PGManagement.PropertyType;
+import com.myspot.backend.entities.PGManagementOwner;
+import com.myspot.backend.entities.PGManagementOwner.VerificationStatus;
+import com.myspot.backend.entities.PGManagementOwner.PropertyType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,17 +18,17 @@ import java.util.Optional;
  * following the same patterns as customer repository
  */
 @Repository
-public interface PGManagementRepository extends JpaRepository<PGManagement, Long> {
+public interface PGManagementRepository extends JpaRepository<PGManagementOwner, Long> {
     
     /**
      * Find PG Management by email address
      */
-    Optional<PGManagement> findByEmailAddress(String emailAddress);
+    Optional<PGManagementOwner> findByEmailAddress(String emailAddress);
     
     /**
      * Find PG Management by password reset token
      */
-    Optional<PGManagement> findByPasswordResetToken(String token);
+    Optional<PGManagementOwner> findByPasswordResetToken(String token);
     
     /**
      * Check if email address already exists
@@ -43,17 +43,17 @@ public interface PGManagementRepository extends JpaRepository<PGManagement, Long
     /**
      * Find active PG Management by email
      */
-    Optional<PGManagement> findByEmailAddressAndIsActiveTrue(String emailAddress);
+    Optional<PGManagementOwner> findByEmailAddressAndIsActiveTrue(String emailAddress);
     
     /**
      * Find PG Management by verification status
      */
-    List<PGManagement> findByVerificationStatus(VerificationStatus verificationStatus);
+    List<PGManagementOwner> findByVerificationStatus(VerificationStatus verificationStatus);
     
     /**
      * Find PG Management by city
      */
-    List<PGManagement> findByCityAndIsActiveTrue(String city);
+    List<PGManagementOwner> findByCityAndIsActiveTrue(String city);
     
     /**
      * Find PG Management by property type
@@ -68,12 +68,12 @@ public interface PGManagementRepository extends JpaRepository<PGManagement, Long
     /**
      * Find all active PG Management
      */
-    List<PGManagement> findAllByIsActiveTrueOrderByCreatedAtDesc();
+    List<PGManagementOwner> findAllByIsActiveTrueOrderByCreatedAtDesc();
     
     /**
      * Find PG Management by email verified status
      */
-    List<PGManagement> findByEmailVerified(Boolean emailVerified);
+    List<PGManagementOwner> findByEmailVerified(Boolean emailVerified);
     
     /**
      * Custom query to find PG Management by location proximity
@@ -82,8 +82,8 @@ public interface PGManagementRepository extends JpaRepository<PGManagement, Long
     /**
      * Find PG Management with pending email verification
      */
-    @Query("SELECT p FROM PGManagement p WHERE p.emailVerified = false AND p.isActive = true")
-    List<PGManagement> findPendingEmailVerification();
+    @Query("SELECT p FROM PGManagementOwner p WHERE p.emailVerified = false AND p.isActive = true")
+    List<PGManagementOwner> findPendingEmailVerification();
     
     /**
      * Count total active PG Management
@@ -98,12 +98,12 @@ public interface PGManagementRepository extends JpaRepository<PGManagement, Long
     /**
      * Find PG Management by owner name
      */
-    List<PGManagement> findByOwnerNameContainingIgnoreCaseAndIsActiveTrue(String ownerName);
+    List<PGManagementOwner> findByOwnerNameContainingIgnoreCaseAndIsActiveTrue(String ownerName);
     
     /**
      * Find PG Management by PG name
      */
-    List<PGManagement> findByPgNameContainingIgnoreCaseAndIsActiveTrue(String pgName);
+    List<PGManagementOwner> findByPgNameContainingIgnoreCaseAndIsActiveTrue(String pgName);
     
     /**
      * Find PGs by sharing option availability

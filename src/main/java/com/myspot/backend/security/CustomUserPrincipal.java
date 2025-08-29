@@ -8,7 +8,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import com.myspot.backend.entities.PGManagement;
+import com.myspot.backend.entities.PGManagementOwner;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -25,7 +25,7 @@ public class CustomUserPrincipal implements UserDetails {
     private String password;
     private Collection<? extends GrantedAuthority> authorities;
 
-    public static CustomUserPrincipal create(PGManagement pgManagement) {
+    public static CustomUserPrincipal create(PGManagementOwner pgManagement) {
         List<GrantedAuthority> authorities = Collections.singletonList(
                 new SimpleGrantedAuthority("ROLE_PG_OWNER")
         );

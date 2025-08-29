@@ -20,7 +20,7 @@ import java.util.Map;
  * @version 1.0.0
  */
 @Entity
-@Table(name = "pg_management", 
+@Table(name = "pg_management_owner", 
        indexes = {
            @Index(name = "idx_pg_email", columnList = "email_address"),
            @Index(name = "idx_pg_phone", columnList = "phone_number"),
@@ -35,7 +35,7 @@ import java.util.Map;
 @Builder
 @ToString(exclude = {"passwordHash", "emailOtp", "phoneOtp"})
 @EqualsAndHashCode(of = {"pgId", "emailAddress"})
-public class PGManagement {
+public class PGManagementOwner {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
