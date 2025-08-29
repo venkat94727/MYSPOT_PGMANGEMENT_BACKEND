@@ -4,7 +4,7 @@ import com.myspot.backend.dto.request.*;
 import com.myspot.backend.dto.response.AuthenticationResponse;
 import com.myspot.backend.dto.response.OtpResponse;
 import com.myspot.backend.entities.PGManagementOwner;
-import com.myspot.backend.repository.PGManagementRepository;
+import com.myspot.backend.repository.PGManagementOwnerRepository;
 import com.myspot.backend.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -24,7 +26,7 @@ import java.util.Optional;
 @Transactional
 public class PGAuthService {
 
-    private final PGManagementRepository pgManagementRepository;
+    private final PGManagementOwnerRepository pgManagementRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final EmailService emailService;
@@ -310,4 +312,53 @@ public class PGAuthService {
                 .verificationStatus(PGManagementOwner.VerificationStatus.PENDING)
                 .build();
     }
+ // ADD these methods to your PGAuthService class:
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> getCurrentUserProfile(Long pgId) {
+        log.info("Getting current user profile for PG ID: {}", pgId);
+        
+        PGManagementOwner pgManagementOwner = pgManagementRepository.findById(pgId)
+            .orElseThrow(() -> new UsernameNotFoundException("PG not found"));
+        
+        Map<String, Object> profile = new HashMap<>();
+        
+        profile.put("pgId", pgManagementOwner.getPgId());
+        profile.put("pgName", pgManagementOwner.getPgName());
+        profile.put("ownerName", pgManagementOwner.getOwnerName());
+        profile.put("emailAddress", pgManagementOwner.getEmailAddress());
+        profile.put("phoneNumber", pgManagementOwner.getPhoneNumber());
+        profile.put("city", pgManagementOwner.getCity());
+        profile.put("state", pgManagementOwner.getState());
+        profile.put("isActive", pgManagementOwner.getIsActive());
+        profile.put("emailVerified", pgManagementOwner.getEmailVerified());
+        profile.put("verificationStatus", pgManagementOwner.getVerificationStatus().name());
+        
+        return profile;
+    }
+
+    public Map<String, Object> updateProfile(Long pgId, Map<String, Object> updateData) {
+        log.info("Updating profile for PG ID: {}", pgId);
+        
+        PGManagementOwner pgManagementOwner = pgManagementRepository.findById(pgId)
+            .orElseThrow(() -> new UsernameNotFoundException("PG not found"));
+        
+        if (updateData.containsKey("pgName")) {
+            pgManagementOwner.setPgName((String) updateData.get("pgName"));
+        }
+        if (updateData.containsKey("ownerName")) {
+            pgManagementOwner.setOwnerName((String) updateData.get("ownerName"));
+        }
+        if (updateData.containsKey("phoneNumber")) {
+            pgManagementOwner.setPhoneNumber((String) updateData.get("phoneNumber"));
+        }
+        if (updateData.containsKey("city")) {
+            pgManagementOwner.setCity((String) updateData.get("city"));
+        }
+        
+        pgManagementOwner = pgManagementRepository.save(pgManagementOwner);
+        
+        return getCurrentUserProfile(pgManagementOwner.getPgId());
+    }
+
 }

@@ -17,6 +17,6 @@ public class WelcomeController {
      */
     @GetMapping("/welcome")
     public String welcome(@AuthenticationPrincipal CustomUserPrincipal user) {
-        return "Welcome, " + user.getEmail() + " (PG ID: " + user.getId() + ")!";
+        return "Welcome, " +  + user.getId() + ")!";
     }
 }

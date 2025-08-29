@@ -1,75 +1,70 @@
 package com.myspot.backend.security;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.myspot.backend.entities.PGManagementOwner;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import com.myspot.backend.entities.PGManagementOwner;
-
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class CustomUserPrincipal implements UserDetails {
-
-    private Long id;
-    private String email;
-    private String password;
-    private Collection<? extends GrantedAuthority> authorities;
-
-    public static CustomUserPrincipal create(PGManagementOwner pgManagement) {
-        List<GrantedAuthority> authorities = Collections.singletonList(
-                new SimpleGrantedAuthority("ROLE_PG_OWNER")
-        );
-
-        return CustomUserPrincipal.builder()
-                .id(pgManagement.getPgId())
-                .email(pgManagement.getEmailAddress())
-                .password(pgManagement.getPasswordHash())
-                .authorities(authorities)
-                .build();
+    
+    private final PGManagementOwner pgManagementOwner;
+    
+    public CustomUserPrincipal(PGManagementOwner pgManagementOwner) {
+        this.pgManagementOwner = pgManagementOwner;
     }
-
+    
+    public static CustomUserPrincipal create(PGManagementOwner pgManagementOwner) {
+        return new CustomUserPrincipal(pgManagementOwner);
+    }
+    
+    public Long getId() {
+        return pgManagementOwner.getPgId();
+    }
+    
+    public PGManagementOwner getPgManagementOwner() {
+        return pgManagementOwner;
+    }
+    
+    // ADD: This fixes the JWT error!
+    public String getEmail() {
+        return pgManagementOwner.getEmailAddress();
+    }
+    
     @Override
     public String getUsername() {
-        return email;
+        return pgManagementOwner.getEmailAddress();
     }
-
+    
     @Override
     public String getPassword() {
-        return password;
+        return pgManagementOwner.getPasswordHash();
     }
-
+    
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return authorities;
+        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_PG_OWNER"));
     }
-
+    
     @Override
     public boolean isAccountNonExpired() {
         return true;
     }
-
+    
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return pgManagementOwner.getIsActive();
     }
-
+    
     @Override
     public boolean isCredentialsNonExpired() {
         return true;
     }
-
+    
     @Override
     public boolean isEnabled() {
-        return true;
+        return pgManagementOwner.getIsActive() && pgManagementOwner.getEmailVerified();
     }
 }

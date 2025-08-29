@@ -5,7 +5,7 @@ import com.myspot.backend.dto.response.ApiResponse;
 import com.myspot.backend.dto.response.AuthenticationResponse;
 import com.myspot.backend.dto.response.OtpResponse;
 import com.myspot.backend.services.PGAuthService;
-
+import com.myspot.backend.dto.request.OtpVerificationRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
