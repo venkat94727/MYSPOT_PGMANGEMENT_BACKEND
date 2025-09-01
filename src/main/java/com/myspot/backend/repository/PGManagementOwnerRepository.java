@@ -53,4 +53,12 @@ public interface PGManagementOwnerRepository extends JpaRepository<PGManagementO
     
     
     Optional<PGManagementOwner> findByPasswordResetToken(String passwordResetToken);
+    
+    
+    @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END FROM PGManagementOwner p WHERE p.phoneNumber = :phoneNumber AND p.pgId != :pgId")
+    boolean existsByPhoneNumberAndPgIdNot(@Param("phoneNumber") String phoneNumber, @Param("pgId") Long pgId);
+    
+    // Optional: Add method to find by phone number excluding current user
+    @Query("SELECT p FROM PGManagementOwner p WHERE p.phoneNumber = :phoneNumber AND p.pgId != :pgId")
+    Optional<PGManagementOwner> findByPhoneNumberAndPgIdNot(@Param("phoneNumber") String phoneNumber, @Param("pgId") Long pgId);
 }

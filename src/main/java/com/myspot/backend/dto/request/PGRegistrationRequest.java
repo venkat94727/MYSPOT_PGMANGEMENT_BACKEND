@@ -28,8 +28,7 @@ public class PGRegistrationRequest {
     @Size(max = 100, message = "Owner name must not exceed 100 characters")
     private String ownerName;
 
-    @Size(max = 500, message = "Profile picture URL must not exceed 500 characters")
-    private String pgProfilePicture;
+   
 
    
 

@@ -17,24 +17,28 @@ public class AuthenticationResponse {
 
     private Boolean success;
     private String message;
-
+    
     // JWT Token fields
     private String accessToken;
     private String refreshToken;
     private String tokenType;
     private Long expiresIn;
-
-    // PG Management info
+    
+    // User Information
     private Long pgId;
     private String emailAddress;
     private String pgName;
     private String ownerName;
-
-    // Status fields
+    
+    // Profile Picture URL - ADD THIS FIELD
+    private String profilePictureUrl;
+    
+    // Verification Status
     private Boolean emailVerified;
     private Boolean phoneVerified;
     private String verificationStatus;
     private Boolean requiresOtpVerification;
-
+    
+    // Metadata
     private LocalDateTime timestamp;
 }

@@ -16,7 +16,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.MediaType;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.math.BigDecimal;
+import java.net.URI;
 
 @Slf4j
 @RestController
@@ -27,27 +34,96 @@ public class PGAuthController {
 
     private final PGAuthService pgAuthService;
 
-    // ============ REGISTRATION ENDPOINT ============
-    @PostMapping("/register")
+   
+    @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Register new PG Management",
-               description = "Register a new PG Management account with email and mobile verification")
+               description = "Register PG with form data and optional profile picture")
     public ResponseEntity<ApiResponse<AuthenticationResponse>> registerPG(
-            @Valid @RequestBody PGRegistrationRequest request,
+            @RequestParam("pgName") String pgName,
+            @RequestParam("ownerName") String ownerName,
+            @RequestParam("emailAddress") String emailAddress,
+            @RequestParam("phoneNumber") String phoneNumber,
+            @RequestParam("password") String password,
+            @RequestParam("confirmPassword") String confirmPassword,
+            @RequestParam("city") String city,
+            @RequestParam("state") String state,
+            @RequestParam("country") String country,
+            @RequestParam("pincode") String pincode,
+            @RequestParam(value = "latitude", required = false) BigDecimal latitude,
+            @RequestParam(value = "longitude", required = false) BigDecimal longitude,
+            @RequestPart(value = "profilePicture", required = false) MultipartFile profilePicture,
             HttpServletRequest httpRequest) {
 
-        log.info("PG Management registration attempt for email: {}", request.getEmailAddress());
+        log.info("PG registration for: {}", emailAddress);
 
-        String clientIp = getClientIpAddress(httpRequest);
-        String userAgent = httpRequest.getHeader("User-Agent");
+        try {
+            // Create request object
+            PGRegistrationRequest request = new PGRegistrationRequest();
+            request.setPgName(pgName);
+            request.setOwnerName(ownerName);
+            request.setEmailAddress(emailAddress);
+            request.setPhoneNumber(phoneNumber);
+            request.setPassword(password);
+            request.setConfirmPassword(confirmPassword);
+            request.setCity(city);
+            request.setState(state);
+            request.setCountry(country);
+            request.setPincode(pincode);
+            request.setLatitude(latitude);
+            request.setLongitude(longitude);
 
-        AuthenticationResponse response = pgAuthService.registerPG(request, clientIp, userAgent);
+            // Validate profile picture if provided
+            if (profilePicture != null && !profilePicture.isEmpty()) {
+                validateProfilePicture(profilePicture);
+            }
 
-        log.info("PG Management registration successful for email: {}", request.getEmailAddress());
+            String clientIp = getClientIpAddress(httpRequest);
+            String userAgent = httpRequest.getHeader("User-Agent");
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(response, "Registration successful! Please check your email for OTP verification."));
+            AuthenticationResponse response = pgAuthService.registerPG(request, profilePicture, clientIp, userAgent);
+
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(ApiResponse.success(response, "Registration successful! Check email for OTP."));
+                    
+        } catch (Exception e) {
+            log.error("Registration failed", e);
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Registration failed: " + e.getMessage()));
+        }
     }
 
+   
+    @PostMapping(value = "/update-profile-picture", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Update profile picture",
+               description = "Update profile picture for authenticated PG Management")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> updateProfilePicture(
+            @RequestPart("profilePicture") MultipartFile profilePicture,
+            @RequestParam("pgId") Long pgId,
+            @RequestHeader(value = "Authorization", required = true) String authHeader) {
+
+        log.info("Profile picture update request for PG ID: {}", pgId);
+
+        try {
+            // Validate authorization header
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponse.error("Invalid authorization header"));
+            }
+
+            // Validate profile picture
+            validateProfilePicture(profilePicture);
+
+            Map<String, Object> response = pgAuthService.updateProfilePicture(pgId, profilePicture);
+
+            return ResponseEntity.ok(ApiResponse.success(response, "Profile picture updated successfully"));
+            
+        } catch (Exception e) {
+            log.error("Profile picture update failed for PG ID: {}", pgId, e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error("Failed to update profile picture: " + e.getMessage()));
+        }
+    }
+   
     // ============ LOGIN ENDPOINT ============
     @PostMapping("/login")
     @Operation(summary = "Login PG Management",
@@ -229,4 +305,36 @@ public class PGAuthController {
     private String getUserAgent(HttpServletRequest request) {
         return request.getHeader("User-Agent");
     }
+    
+       private void validateProfilePicture(MultipartFile profilePicture) {
+        if (profilePicture == null || profilePicture.isEmpty()) {
+            throw new IllegalArgumentException("Profile picture cannot be empty");
+        }
+
+        // Check file size (5MB limit)
+        long maxSize = 5 * 1024 * 1024; // 5MB
+        if (profilePicture.getSize() > maxSize) {
+            throw new IllegalArgumentException("Profile picture size cannot exceed 5MB");
+        }
+
+        // Check content type
+        String contentType = profilePicture.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new IllegalArgumentException("Profile picture must be an image file");
+        }
+
+        // Check allowed extensions
+        String originalFilename = profilePicture.getOriginalFilename();
+        if (originalFilename == null) {
+            throw new IllegalArgumentException("Profile picture filename is required");
+        }
+
+        String extension = originalFilename.substring(originalFilename.lastIndexOf(".") + 1).toLowerCase();
+        List<String> allowedExtensions = Arrays.asList("jpg", "jpeg", "png", "gif", "bmp", "webp");
+        if (!allowedExtensions.contains(extension)) {
+            throw new IllegalArgumentException("Profile picture must be one of: " + allowedExtensions);
+        }
+    }
+    
+   
 }
